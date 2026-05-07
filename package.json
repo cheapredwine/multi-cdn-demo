@@ -5,6 +5,10 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "deploy:public": "wrangler deploy --env public",
+    "deploy:secure": "wrangler deploy --env secure",
+    "deploy:meter": "wrangler deploy --env meter",
+    "deploy:all": "wrangler deploy --env public && wrangler deploy --env secure && wrangler deploy --env meter",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "biome check src __tests__",
