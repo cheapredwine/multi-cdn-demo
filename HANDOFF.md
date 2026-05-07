@@ -74,7 +74,9 @@ Nothing infra-blocking. Optional polish:
 - `RESTART.md` — technical context for next agent session
 - `TODO.md` — now empty of P1/P2 items; only polish remains
 - `docs/fix-assets-demo-ssl.md` — runbook for the LB SSL/health/host-override fix sequence (kept as reference)
-- `multicdn-demo-run-of-show-*.md` — updated 2026-05-06 with env-based deploys, WARP note, demo_seed, longer LB-flip wait, real path_routing
+- `docs/proposal-images-followup-demo.md` — proposal for a Cloudflare Images-focused follow-up demo (meeting #2). Don't build until SE reviews scope.
+- `multicdn-demo-run-of-show-*.md` — updated 2026-05-07 with env-based deploys, WARP note, demo_seed, longer LB-flip wait, real path_routing, cache-bust on all curl loops, Beat 5 verbal hook for Images follow-up
+- `multicdn-demo-build-manual-*.md` — has KV→R2 migration note at top; Phase 5 Host header overrides + new failure mode for HTTP 525
 - `wrangler.toml` — single source of truth, env-based
 - `src/lib/meter.ts` — shared bytes-counter helper
 

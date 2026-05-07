@@ -14,6 +14,7 @@
 
 ## 🟢 Future / nice-to-have (post-demo)
 
+- [ ] **Cloudflare Images follow-up demo (meeting #2).** Self-contained ~10-minute demo on top of the existing R2/zone infrastructure. Three close-question options (provider directory / patient education / insurance-card upload). Full proposal at `docs/proposal-images-followup-demo.md` — review with SE before building.
 - [ ] **Tighten CORS** on the secure Worker before any non-demo use. Currently `Access-Control-Allow-Origin: *`. Production behind Cloudflare Access would restrict to known origins.
 - [ ] **`verify-all.sh` honest TLS** — drop `ssl.CERT_NONE`. Was kept for WARP compat but it can no longer catch a bad cert.
 - [ ] **Meter UI display nits** (cosmetic):
