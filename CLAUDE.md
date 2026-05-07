@@ -128,6 +128,7 @@ Do not create files outside this structure without asking first.
 - Adding new dependencies
 - Deleting or renaming existing files
 - Any approach where two reasonable implementations exist and the tradeoff isn't obvious
+- **Substituting a workaround for a path the user explicitly named** — if the user asks you to test/verify/debug `X` and `X` is broken, the default is to diagnose and fix `X`, not redirect to a working `Y`. Reach for `Y` only when the user chooses the workaround, when fixing `X` is genuinely out of scope, or when you've explicitly asked first.
 
 **Make a reasonable call and note your assumption on:**
 - Implementation details within an established pattern
