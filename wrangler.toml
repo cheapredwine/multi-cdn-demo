@@ -1,38 +1,63 @@
-name = "your-worker-name"
+# Multi-CDN demo — single config with deploy environments.
+#
+# Top-level: vitest target (test-only stub). Bindings are inherited by all envs.
+# Deploys: `wrangler deploy --env public|secure|meter`.
+#
+# Note: the KV namespace `multicdn-demo-audit-20260505-2351` exists but is
+# unused — audit + meter are R2-backed (see RESTART.md / build-manual note).
+#
+# --- Secrets (set via wrangler secret put --env <name>) ---
+# - JWT_SECRET (env.secure)
+
+name = "multicdn-demo-test"
 main = "src/index.ts"
 compatibility_date = "2025-04-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Uncomment and configure bindings as needed for this project
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "multicdn-demo-20260505-2351"
 
-# --- AI ---
-# [ai]
-# binding = "AI"
+# ── Deploy: public-steering Worker ──────────────────────────────────
+# Bound to cf-pool.demo.jsherron.com. Multi-mode steering.
+# Run-of-show flips STEERING_MODE between passthrough / path_routing / percent_rollout.
 
-# --- D1 ---
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "your-db-name"
-# database_id = "TODO: fill in after wrangler d1 create"
+[env.public]
+name = "multicdn-demo-public-steering"
+main = "src/workers/public-steering/index.ts"
+routes = [{ pattern = "cf-pool.demo.jsherron.com", custom_domain = true }]
+workers_dev = true
 
-# --- R2 ---
-# [[r2_buckets]]
-# binding = "BUCKET"
-# bucket_name = "your-bucket-name"
+[env.public.vars]
+STEERING_MODE = "passthrough"
+ROLLOUT_PCT = "50"
 
-# --- KV ---
-# [[kv_namespaces]]
-# binding = "KV"
-# id = "TODO: fill in after wrangler kv:namespace create"
+[[env.public.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "multicdn-demo-20260505-2351"
 
-# --- Durable Objects ---
-# [[durable_objects.bindings]]
-# name = "MY_DO"
-# class_name = "MyDurableObject"
-#
-# [[migrations]]
-# tag = "v1"
-# new_classes = ["MyDurableObject"]
+# ── Deploy: secure Worker ───────────────────────────────────────────
+# Bound to secure.demo.jsherron.com. JWT issuance + protected content + audit log.
 
-# --- Secrets (set via wrangler secret put, never here) ---
-# MY_SECRET_KEY
+[env.secure]
+name = "multicdn-demo-secure"
+main = "src/workers/secure/index.ts"
+routes = [{ pattern = "secure.demo.jsherron.com", custom_domain = true }]
+workers_dev = true
+
+[[env.secure.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "multicdn-demo-20260505-2351"
+
+# ── Deploy: meter Worker ────────────────────────────────────────────
+# Bound to meter.demo.jsherron.com. Renders egress-meter UI from R2 counter.
+
+[env.meter]
+name = "multicdn-demo-meter"
+main = "src/workers/meter/index.ts"
+routes = [{ pattern = "meter.demo.jsherron.com", custom_domain = true }]
+workers_dev = true
+
+[[env.meter.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "multicdn-demo-20260505-2351"

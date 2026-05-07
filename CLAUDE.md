@@ -18,8 +18,7 @@ Do not proceed with any other work until these steps are done.
 
 ## Project context
 
-<!-- TODO: Replace this section with a description of this specific project -->
-This is a Cloudflare-native project. All compute runs on Workers. There is no Node.js server, no Docker, no traditional backend. When in doubt, the answer is probably a Worker, a Durable Object, or a binding — not a new service.
+A multi-CDN demo environment that proves: (1) a single R2 origin serves multiple CDNs without replication, (2) CDN failover is operational not architectural, (3) protected content is JWT-gated and audited at the edge, and (4) origin egress fees are zero regardless of which CDN pulls. Built for a ~15-minute first meeting with a hospital IT director.
 
 ---
 
@@ -32,12 +31,8 @@ This is a Cloudflare-native project. All compute runs on Workers. There is no No
 | Package manager | bun |
 | Testing | vitest |
 | Linting / formatting | biome |
-| Storage (relational) | D1 |
 | Storage (blob) | R2 |
 | Storage (ephemeral KV) | Workers KV |
-| Stateful coordination | Durable Objects |
-| Agent framework | McpAgent (workers-mcp) |
-| Local dev | wrangler dev |
 
 <!-- TODO: Remove bindings not used in this project -->
 
@@ -77,15 +72,23 @@ This is a Cloudflare-native project. All compute runs on Workers. There is no No
 
 ```
 src/
-  index.ts          # Worker entry point — routing only, no business logic
-  types.ts          # All shared types
-  handlers/         # One file per route or concern
-  lib/              # Pure utility functions with no Worker dependencies
-  agents/           # McpAgent definitions
-__tests__/          # Mirrors src/ structure
-wrangler.toml
+  index.ts                     # Default-config Worker (template stub, used by vitest)
+  types.ts                     # All shared types; augments Cloudflare.Env
+  workers/
+    public-steering/index.ts   # Bound to cf-pool.demo — multi-mode CF pool
+    secure/index.ts            # Bound to secure.demo — JWT + audit log
+    meter/index.ts             # Bound to meter.demo — egress meter UI
+  pages/
+    portal/index.html          # Pages: patient portal
+    audit/index.html           # Pages: live audit view
+__tests__/                     # Mirrors src/ structure
+wrangler.toml                  # Default dev/test config (vitest reads this)
+wrangler.public.toml           # Deploy config for public-steering
+wrangler.secure.toml           # Deploy config for secure
+wrangler.meter.toml            # Deploy config for meter
 biome.json
 tsconfig.json
+vitest.config.mts
 ```
 
 Do not create files outside this structure without asking first.
@@ -143,6 +146,20 @@ When you make an assumption, note it briefly at the end of your response: `Assum
 - Do not generate boilerplate "just in case." Build exactly what was asked.
 - Do not write placeholder implementations with TODO comments and call it done.
 - Do not explain what you just did in a long post-response summary. Show the diff, state any assumptions, stop.
+
+---
+
+## Commit hygiene
+
+Project-state docs (anything tracking resource inventory, status, handoff context, or open work — typically named `STATE.md`, `HANDOFF.md`, `TODO.md`, `RESTART.md`, or similar) MUST be updated as part of preparing any commit that materially changes the project. Treat them as part of the diff, not as an afterthought.
+
+Specifically:
+- A commit that changes infrastructure (resources created, deleted, or reconfigured) updates `STATE.md` in the same commit.
+- A commit that changes "what's working / what's broken / what's next" updates `HANDOFF.md` and `TODO.md` in the same commit.
+- A commit that changes how a future agent should restart on this project updates `RESTART.md` in the same commit.
+- Run tests before any commit that touches code (per global agent rules); update test counts in state docs if they shifted.
+
+If no state docs exist yet but the project has accumulated context worth tracking, propose them before the next commit instead of letting context decay.
 
 ---
 

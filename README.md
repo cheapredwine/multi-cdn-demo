@@ -1,13 +1,6 @@
-# your-worker-name
+# multicdn-demo
 
-<!-- TODO: Replace with a description of what this Worker does -->
-
-## First steps after creating from template
-
-1. **`CLAUDE.md`** — update the Project context section at the top, and trim the Stack table to only the bindings this project actually uses
-2. **`wrangler.toml`** — uncomment the bindings you need, fill in `name`, run `wrangler d1 create` / `wrangler kv:namespace create` etc. to get real IDs
-3. **`src/types.ts`** — add your bindings to the `Env` type to match `wrangler.toml`
-4. **`README.md`** — fill in this file (including deleting this section)
+A multi-CDN demo environment built on Cloudflare. Proves single-origin multi-CDN steering, instant failover, JWT-gated protected content with edge auditing, and zero R2 egress fees.
 
 ---
 

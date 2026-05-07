@@ -1,0 +1,15 @@
+# Local dev state
+.wrangler/
+public/
+
+# Dependencies
+node_modules/
+
+# Generated during build
+dist/
+
+# OS files
+.DS_Store
+
+# Python venv (if recreated)
+venv/

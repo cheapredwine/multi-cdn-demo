@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Hospital — Patient Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-lg max-w-lg w-full p-8">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-10 h-10 bg-blue-900 rounded-lg flex items-center justify-center text-white font-bold text-sm">DH</div>
+      <h1 class="text-xl font-bold text-blue-900">Demo Hospital — Patient Portal</h1>
+    </div>
+
+    <p class="text-gray-600 mb-6">Generate a secure, time-limited link to your after-visit summary.</p>
+
+    <button id="generateBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
+      Generate 60-second link to After-Visit Summary
+    </button>
+
+    <div id="result" class="hidden mt-6">
+      <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-3">
+        <p class="text-sm mb-2">Your secure link — <span id="countdown" class="font-bold text-green-800">expires in 60s</span></p>
+        <a id="link" href="#" target="_blank" class="text-blue-600 hover:underline break-all text-sm"></a>
+      </div>
+      <div class="bg-gray-100 rounded-lg p-3 flex items-center gap-2">
+        <input id="copyBox" type="text" readonly class="bg-transparent flex-1 text-sm text-gray-700 outline-none" value="">
+        <button id="copyBtn" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Copy</button>
+      </div>
+    </div>
+
+    <div id="expired" class="hidden mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
+      <p class="text-red-700 font-semibold text-center">EXPIRED</p>
+      <p class="text-red-600 text-sm text-center mt-1">This link is no longer valid. Generate a new one.</p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://secure.demo.jsherron.com';
+    let timer = null;
+
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      // Reset display state for the new link
+      document.getElementById('expired').classList.add('hidden');
+      const countdown = document.getElementById('countdown');
+      countdown.classList.remove('text-red-700', 'line-through');
+      countdown.classList.add('text-green-800');
+      document.getElementById('generateBtn').disabled = true;
+      document.getElementById('generateBtn').textContent = 'Generating...';
+
+      try {
+        const resp = await fetch(`${API_BASE}/issue`, { method: 'POST' });
+        const data = await resp.json();
+
+        if (data.url) {
+          document.getElementById('link').href = data.url;
+          document.getElementById('link').textContent = data.url;
+          document.getElementById('copyBox').value = data.url;
+          document.getElementById('result').classList.remove('hidden');
+
+          let seconds = 60;
+          countdown.textContent = `expires in ${seconds}s`;
+
+          if (timer) clearInterval(timer);
+          timer = setInterval(() => {
+            seconds--;
+            if (seconds > 0) {
+              countdown.textContent = `expires in ${seconds}s`;
+            } else {
+              clearInterval(timer);
+              // Keep the link visible and clickable so the SE can demo the
+              // post-expiry 403 by clicking the same URL again. Just flag
+              // that it's expired in place.
+              countdown.textContent = 'EXPIRED';
+              countdown.classList.remove('text-green-800');
+              countdown.classList.add('text-red-700');
+              document.getElementById('expired').classList.remove('hidden');
+            }
+          }, 1000);
+        }
+      } catch (e) {
+        alert('Failed to generate link. Please try again.');
+      } finally {
+        document.getElementById('generateBtn').disabled = false;
+        document.getElementById('generateBtn').textContent = 'Generate 60-second link to After-Visit Summary';
+      }
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const box = document.getElementById('copyBox');
+      box.select();
+      navigator.clipboard.writeText(box.value);
+      document.getElementById('copyBtn').textContent = 'Copied!';
+      setTimeout(() => document.getElementById('copyBtn').textContent = 'Copy', 1500);
+    });
+  </script>
+</body>
+</html>
