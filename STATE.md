@@ -67,7 +67,7 @@ All three deployed via single `wrangler.toml` with `[env.public|secure|meter]`. 
 | Secret | Location | Notes |
 |---|---|---|
 | `JWT_SECRET` | Wrangler secret (secure Worker) | Phase 6 |
-| `X-Multicdn-Demo-Secret` | CloudFront custom header | Phase 3 — `XhYsEaHw/CDBfVWrDzEpM6r/Yg/cnfzqBc7HSntZd74=` |
+| `X-Multicdn-Demo-Secret` | CloudFront custom header | `<generate-32-byte-random-base64>` — generated with `openssl rand -base64 32` |
 | R2 API token (read-only) | Cloudflare API tokens | Phase 3 |
 
 ---
