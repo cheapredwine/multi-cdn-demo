@@ -295,10 +295,59 @@ The meter auto-refreshes every 10 seconds. Use `?demo_seed=10` to prime realisti
 
 ## Setup
 
+### 1. Install dependencies
+
 ```bash
 bun install
+```
+
+### 2. Configure local secrets
+
+```bash
 cp .dev.vars.example .dev.vars
-# Fill in .dev.vars with local secret values
+# Edit .dev.vars and set a real JWT_SECRET for local dev
+```
+
+### 3. Set runtime variables (one-time, per environment)
+
+The `DOMAIN` variable controls all hostnames in the demo. Set it once per Worker environment via the dashboard or CLI:
+
+```bash
+# Via CLI — repeat for each environment
+wrangler vars put DOMAIN --env public
+# Enter: demo.example.com
+
+wrangler vars put DOMAIN --env secure
+wrangler vars put DOMAIN --env meter
+wrangler vars put DOMAIN --env portal
+wrangler vars put DOMAIN --env audit
+```
+
+Or set it in the Cloudflare dashboard for each Worker (Settings → Variables). With `keep_vars = true` in `wrangler.toml`, these survive all future redeploys.
+
+### 4. Set the JWT secret
+
+```bash
+wrangler secret put JWT_SECRET --env secure
+# Enter a strong random secret (e.g. openssl rand -base64 32)
+```
+
+### 5. Upload demo assets to R2
+
+Create an R2 bucket and upload the contents of `seed/`:
+
+```bash
+# The bucket name must match what's configured in wrangler.toml
+wrangler r2 object put multicdn-demo-20260505-2351/public/healthcheck.txt --file seed/public/healthcheck.txt
+# ... repeat for all files under seed/public/ and seed/private/
+```
+
+### 6. Verify local dev works
+
+```bash
+bun run dev        # local Worker at http://localhost:8787
+bun test           # run the test suite
+bun run check      # typecheck + lint + test
 ```
 
 ## Dev
@@ -313,15 +362,17 @@ bun run check      # all three at once
 
 ## Deploy
 
-This project deploys **three separate Workers** from a single `wrangler.toml`:
+This project deploys **five separate Workers** from a single `wrangler.toml`:
 
 ```bash
 # Deploy individual Workers
 bun run deploy:public   # public-steering Worker (cf-pool.demo...)
 bun run deploy:secure   # secure Worker (JWT + protected content)
 bun run deploy:meter    # egress meter Worker
+bun run deploy:portal   # patient portal UI
+bun run deploy:audit    # live audit log viewer
 
-# Deploy all three in sequence
+# Deploy all five in sequence
 bun run deploy:all
 
 # Live mode-toggle for Beat 3 (no file edit needed)
@@ -330,13 +381,21 @@ wrangler deploy --env public --var STEERING_MODE:percent_rollout --var ROLLOUT_P
 wrangler deploy --env public   # reset to passthrough
 ```
 
-> **Note:** `bun run deploy` (without `--env`) deploys a test-only stub (`src/index.ts`) — not the actual demo Workers. Always use `--env public|secure|meter` or the convenience scripts above.
+> **Note:** `bun run deploy` (without `--env`) deploys a test-only stub (`src/index.ts`) — not the actual demo Workers. Always use `--env public|secure|meter|portal|audit` or the convenience scripts above.
 
 ## Bindings
 
 | Binding | Type | Purpose |
 |---|---|---|
-| `BUCKET` | R2 Bucket | `multicdn-demo-20260505-2351` — stores public assets, private docs, audit logs, and meter counters |
+| `BUCKET` | R2 Bucket | stores public assets, private docs, audit logs, and meter counters |
+
+## Runtime Variables
+
+Set via `wrangler vars put VAR_NAME --env <env>`. These are preserved across redeploys (`keep_vars = true`).
+
+| Variable | Environments | Purpose |
+|---|---|---|
+| `DOMAIN` | all | Base domain for all demo hostnames (e.g. `demo.example.com`). Injected into HTML and redirect URLs at runtime. |
 
 ## Secrets
 
@@ -354,12 +413,12 @@ src/
     public-steering/index.ts   # Public Worker: passthrough / path_routing / percent_rollout
     secure/index.ts            # Secure Worker: JWT issuance + validation + audit logging
     meter/index.ts             # Meter Worker: renders live egress-cost comparison UI
-  pages/
-    portal/index.html          # Demo patient portal (Pages-hosted)
-    audit/index.html           # Live audit log viewer (Pages-hosted)
+    portal/index.ts            # Portal Worker: serves patient portal HTML (injects DOMAIN)
+    audit/index.ts             # Audit Worker: serves live audit viewer HTML (injects DOMAIN)
   lib/
     meter.ts                   # Shared egress-counter helpers (R2-backed)
   types.ts                     # Shared TypeScript types
+  index.ts                     # Default Worker stub (test target)
 ```
 
 ## Honest Caveats
@@ -370,9 +429,22 @@ src/
 - **The Worker layer is optional.** Many customers run multi-CDN purely on the Load Balancer layer; the Worker is shown to demonstrate what becomes available, not what's required.
 - **For full geographic-failure resilience** ("what if Cloudflare itself has an outage?"), customers can replicate R2 to S3 or another origin. That's a different conversation.
 
-## Companion Docs
+## Configuration
 
-- [`multicdn-demo-architecture-20260505T2317Z.md`](./multicdn-demo-architecture-20260505T2317Z.md) — Detailed architecture decisions and design rationale
-- [`multicdn-demo-run-of-show-20260505T2317Z.md`](./multicdn-demo-run-of-show-20260505T2317Z.md) — Step-by-step script for running the demo in a meeting
-- [`multicdn-demo-build-manual-20260505T2317Z.md`](./multicdn-demo-build-manual-20260505T2317Z.md) — Complete build instructions for reproducing the environment
-- [`STATE.md`](./STATE.md) — Live resource inventory (hostnames, IDs, secrets)
+All hostnames and the R2 bucket name are injected at runtime via the `DOMAIN` variable — no source code edits required to deploy to a different zone.
+
+1. Set `DOMAIN` once per environment:
+   ```bash
+   wrangler vars put DOMAIN --env public
+   # Enter: demo.example.com
+   ```
+   Repeat for `--env secure`, `--env meter`, `--env portal`, `--env audit`.
+
+2. Deploy:
+   ```bash
+   bun run deploy:all
+   ```
+
+The `keep_vars = true` setting in `wrangler.toml` ensures dashboard/CLI variables survive future redeploys.
+
+---

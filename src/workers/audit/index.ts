@@ -1,4 +1,14 @@
-<!DOCTYPE html>
+/**
+ * Audit Worker.
+ *
+ * Serves the live audit-log viewer. The API base URL is injected from the
+ * runtime `DOMAIN` variable so the same code deploys to any zone without edits.
+ */
+
+import type { Env } from "../../types";
+
+function renderAudit(domain: string): string {
+	return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -46,13 +56,11 @@
   </div>
 
   <script>
-    const API_BASE = 'https://secure.demo.jsherron.com';
-    // Track audit entries we've already rendered, keyed by jti (stable per record).
-    // Falling back to a composite key if jti is empty (legacy entries).
+    const API_BASE = 'https://secure.${domain}';
     const seen = new Set();
 
     function entryKey(entry) {
-      return entry.jti || `${entry.ts}|${entry.path}|${entry.decision}|${entry.reason || ''}`;
+      return entry.jti || \`\${entry.ts}|\${entry.path}|\${entry.decision}|\${entry.reason || ''}\`;
     }
 
     function formatTs(ts) {
@@ -60,7 +68,7 @@
       const date = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
       const time = d.toLocaleTimeString(undefined, { hour12: false });
       const ms = String(d.getMilliseconds()).padStart(3, '0');
-      return `${date} ${time}.${ms}`;
+      return \`\${date} \${time}.\${ms}\`;
     }
 
     function decisionColor(decision) {
@@ -72,20 +80,20 @@
     function buildRow(entry) {
       const tr = document.createElement('tr');
       tr.className = 'flash-new';
-      tr.innerHTML = `
-        <td class="px-4 py-2 text-gray-600 font-mono text-xs">${formatTs(entry.ts)}</td>
-        <td class="px-4 py-2 text-gray-800">${entry.sub || '-'}</td>
-        <td class="px-4 py-2 text-gray-600 font-mono text-xs">${entry.path || '-'}</td>
-        <td class="px-4 py-2 text-gray-600 font-mono text-xs">${entry.ip || '-'}</td>
-        <td class="px-4 py-2"><span class="${decisionColor(entry.decision)}">${entry.decision}</span></td>
-        <td class="px-4 py-2 text-gray-500 text-xs">${entry.reason || ''}</td>
-      `;
+      tr.innerHTML = \`
+        <td class="px-4 py-2 text-gray-600 font-mono text-xs">\${formatTs(entry.ts)}</td>
+        <td class="px-4 py-2 text-gray-800">\${entry.sub || '-'}</td>
+        <td class="px-4 py-2 text-gray-600 font-mono text-xs">\${entry.path || '-'}</td>
+        <td class="px-4 py-2 text-gray-600 font-mono text-xs">\${entry.ip || '-'}</td>
+        <td class="px-4 py-2"><span class="\${decisionColor(entry.decision)}">\${entry.decision}</span></td>
+        <td class="px-4 py-2 text-gray-500 text-xs">\${entry.reason || ''}</td>
+      \`;
       return tr;
     }
 
     async function poll() {
       try {
-        const resp = await fetch(`${API_BASE}/audit/recent`);
+        const resp = await fetch(\`\${API_BASE}/audit/recent\`);
         const entries = await resp.json();
         if (entries.length === 0) return;
 
@@ -93,7 +101,6 @@
         const emptyRow = document.getElementById('emptyRow');
         if (emptyRow) emptyRow.remove();
 
-        // API returns newest-first. Find the entries we haven't seen, in API order.
         const fresh = [];
         for (const entry of entries) {
           const key = entryKey(entry);
@@ -103,13 +110,10 @@
           }
         }
 
-        // To preserve API ordering (newest at top of table) using insertBefore,
-        // iterate fresh in reverse so the API-newest is inserted last and ends up first.
         for (const entry of [...fresh].reverse()) {
           tbody.insertBefore(buildRow(entry), tbody.firstChild);
         }
 
-        // Keep max 100 rows visible
         while (tbody.children.length > 100) {
           tbody.removeChild(tbody.lastChild);
         }
@@ -122,4 +126,19 @@
     setInterval(poll, 2000);
   </script>
 </body>
-</html>
+</html>`;
+}
+
+export function handleAudit(_request: Request, env: Env): Response {
+	const domain = env.DOMAIN || "demo.jsherron.com";
+	const html = renderAudit(domain);
+	return new Response(html, {
+		headers: { "content-type": "text/html; charset=utf-8" },
+	});
+}
+
+export default {
+	async fetch(request: Request, env: Env): Promise<Response> {
+		return handleAudit(request, env);
+	},
+} satisfies ExportedHandler<Env>;

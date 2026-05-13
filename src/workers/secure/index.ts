@@ -150,7 +150,7 @@ async function handleIssue(request: Request, env: Env): Promise<Response> {
 
 	return Response.json({
 		token,
-		url: `https://secure.demo.jsherron.com/private/docs/after-visit-summary-sample.pdf?token=${token}`,
+		url: `https://secure.${env.DOMAIN || "demo.jsherron.com"}/private/docs/after-visit-summary-sample.pdf?token=${token}`,
 		expires_at: expiresAt,
 	});
 }

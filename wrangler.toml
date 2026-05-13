@@ -1,10 +1,10 @@
 # Multi-CDN demo — single config with deploy environments.
 #
 # Top-level: vitest target (test-only stub). Bindings are inherited by all envs.
-# Deploys: `wrangler deploy --env public|secure|meter`.
+# Deploys: `wrangler deploy --env public|secure|meter|portal|audit`.
 #
-# Note: the KV namespace `multicdn-demo-audit-20260505-2351` exists but is
-# unused — audit + meter are R2-backed (see RESTART.md / build-manual note).
+# --- Runtime variables (set via dashboard or `wrangler vars put`) ---
+# DOMAIN — the base domain for all demo hostnames (e.g. "demo.example.com")
 #
 # --- Secrets (set via wrangler secret put --env <name>) ---
 # - JWT_SECRET (env.secure)
@@ -14,12 +14,15 @@ main = "src/index.ts"
 compatibility_date = "2025-04-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Preserve dashboard/CLI-set variables across redeploys
+keep_vars = true
+
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "multicdn-demo-20260505-2351"
 
 # ── Deploy: public-steering Worker ──────────────────────────────────
-# Bound to cf-pool.demo.jsherron.com. Multi-mode steering.
+# Multi-mode steering.
 # Run-of-show flips STEERING_MODE between passthrough / path_routing / percent_rollout.
 
 [env.public]
@@ -37,7 +40,7 @@ binding = "BUCKET"
 bucket_name = "multicdn-demo-20260505-2351"
 
 # ── Deploy: secure Worker ───────────────────────────────────────────
-# Bound to secure.demo.jsherron.com. JWT issuance + protected content + audit log.
+# JWT issuance + protected content + audit log.
 
 [env.secure]
 name = "multicdn-demo-secure"
@@ -50,7 +53,7 @@ binding = "BUCKET"
 bucket_name = "multicdn-demo-20260505-2351"
 
 # ── Deploy: meter Worker ────────────────────────────────────────────
-# Bound to meter.demo.jsherron.com. Renders egress-meter UI from R2 counter.
+# Renders egress-meter UI from R2 counter.
 
 [env.meter]
 name = "multicdn-demo-meter"
@@ -61,3 +64,21 @@ workers_dev = true
 [[env.meter.r2_buckets]]
 binding = "BUCKET"
 bucket_name = "multicdn-demo-20260505-2351"
+
+# ── Deploy: portal Worker ───────────────────────────────────────────
+# Patient portal — serves the "Generate Link" UI.
+
+[env.portal]
+name = "multicdn-demo-portal"
+main = "src/workers/portal/index.ts"
+routes = [{ pattern = "portal.demo.jsherron.com", custom_domain = true }]
+workers_dev = true
+
+# ── Deploy: audit Worker ────────────────────────────────────────────
+# Live audit log viewer — polls /audit/recent.
+
+[env.audit]
+name = "multicdn-demo-audit"
+main = "src/workers/audit/index.ts"
+routes = [{ pattern = "audit.demo.jsherron.com", custom_domain = true }]
+workers_dev = true

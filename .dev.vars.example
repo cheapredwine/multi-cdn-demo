@@ -1,0 +1,9 @@
+# Local development secrets — copy to .dev.vars and fill in real values.
+# These are only used by `wrangler dev` and vitest (via vitest.config.mts).
+# Never commit .dev.vars to version control.
+
+# Required for secure Worker JWT signing/validation
+JWT_SECRET=replace-with-a-real-secret-for-local-dev
+
+# Optional: override the default domain used in tests and local dev
+# DOMAIN=demo.example.com

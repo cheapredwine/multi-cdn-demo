@@ -134,7 +134,7 @@ describe("handlePublicSteering — path_routing mode", () => {
 
 		expect(res.status).toBe(302);
 		expect(res.headers.get("location")).toBe(
-			"https://cloudfront-pool.demo.jsherron.com/images/logo.png"
+			"https://cloudfront-pool.demo.example.com/images/logo.png"
 		);
 	});
 
@@ -181,7 +181,7 @@ describe("handlePublicSteering — percent_rollout mode", () => {
 		await waitOnExecutionContext(ctx);
 		expect(res.status).toBe(302);
 		expect(res.headers.get("location")).toBe(
-			"https://cloudfront-pool.demo.jsherron.com/images/logo.png"
+			"https://cloudfront-pool.demo.example.com/images/logo.png"
 		);
 	});
 

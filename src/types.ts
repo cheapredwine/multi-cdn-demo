@@ -17,6 +17,7 @@ declare global {
 			JWT_SECRET: string;
 			STEERING_MODE: string;
 			ROLLOUT_PCT: string;
+			DOMAIN: string;
 		}
 	}
 }

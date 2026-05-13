@@ -1,4 +1,14 @@
-<!DOCTYPE html>
+/**
+ * Portal Worker.
+ *
+ * Serves the patient-portal demo page. The API base URL is injected from the
+ * runtime `DOMAIN` variable so the same code deploys to any zone without edits.
+ */
+
+import type { Env } from "../../types";
+
+function renderPortal(domain: string): string {
+	return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -37,11 +47,10 @@
   </div>
 
   <script>
-    const API_BASE = 'https://secure.demo.jsherron.com';
+    const API_BASE = 'https://secure.${domain}';
     let timer = null;
 
     document.getElementById('generateBtn').addEventListener('click', async () => {
-      // Reset display state for the new link
       document.getElementById('expired').classList.add('hidden');
       const countdown = document.getElementById('countdown');
       countdown.classList.remove('text-red-700', 'line-through');
@@ -50,7 +59,7 @@
       document.getElementById('generateBtn').textContent = 'Generating...';
 
       try {
-        const resp = await fetch(`${API_BASE}/issue`, { method: 'POST' });
+        const resp = await fetch(\`\${API_BASE}/issue\`, { method: 'POST' });
         const data = await resp.json();
 
         if (data.url) {
@@ -60,18 +69,15 @@
           document.getElementById('result').classList.remove('hidden');
 
           let seconds = 60;
-          countdown.textContent = `expires in ${seconds}s`;
+          countdown.textContent = \`expires in \${seconds}s\`;
 
           if (timer) clearInterval(timer);
           timer = setInterval(() => {
             seconds--;
             if (seconds > 0) {
-              countdown.textContent = `expires in ${seconds}s`;
+              countdown.textContent = \`expires in \${seconds}s\`;
             } else {
               clearInterval(timer);
-              // Keep the link visible and clickable so the SE can demo the
-              // post-expiry 403 by clicking the same URL again. Just flag
-              // that it's expired in place.
               countdown.textContent = 'EXPIRED';
               countdown.classList.remove('text-green-800');
               countdown.classList.add('text-red-700');
@@ -96,4 +102,19 @@
     });
   </script>
 </body>
-</html>
+</html>`;
+}
+
+export function handlePortal(_request: Request, env: Env): Response {
+	const domain = env.DOMAIN || "demo.jsherron.com";
+	const html = renderPortal(domain);
+	return new Response(html, {
+		headers: { "content-type": "text/html; charset=utf-8" },
+	});
+}
+
+export default {
+	async fetch(request: Request, env: Env): Promise<Response> {
+		return handlePortal(request, env);
+	},
+} satisfies ExportedHandler<Env>;

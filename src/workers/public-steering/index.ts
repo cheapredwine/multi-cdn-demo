@@ -12,14 +12,16 @@
  * loops on `/images/*` show 302s with Location pointing at the CloudFront pool.
  */
 
-const CLOUDFRONT_POOL_HOSTNAME = "cloudfront-pool.demo.jsherron.com";
-
 import { incrementBytesServed } from "../../lib/meter";
 import type { Env } from "../../types";
 
 const MODE_PASSTHROUGH = "passthrough";
 const MODE_PATH_ROUTING = "path_routing";
 const MODE_PERCENT_ROLLOUT = "percent_rollout";
+
+function cloudfrontHostname(env: Env): string {
+	return `cloudfront-pool.${env.DOMAIN || "demo.jsherron.com"}`;
+}
 
 /**
  * Normalize incoming path to R2 object key.
@@ -105,7 +107,7 @@ export async function handlePublicSteering(
 		}
 		// Non-video paths get redirected to CloudFront so the steering decision
 		// is actually behavioral, not just a response-header label.
-		const cfUrl = `https://${CLOUDFRONT_POOL_HOSTNAME}${url.pathname}`;
+		const cfUrl = `https://${cloudfrontHostname(env)}${url.pathname}`;
 		return Response.redirect(cfUrl, 302);
 	}
 
@@ -123,7 +125,7 @@ export async function handlePublicSteering(
 			return new Response("Not found", { status: 404 });
 		}
 		// Redirect to CloudFront
-		const cfUrl = `https://${CLOUDFRONT_POOL_HOSTNAME}${url.pathname}`;
+		const cfUrl = `https://${cloudfrontHostname(env)}${url.pathname}`;
 		return Response.redirect(cfUrl, 302);
 	}
 
