@@ -2,6 +2,9 @@
 .wrangler/
 public/
 
+# Secrets — never commit local dev credentials
+.dev.vars
+
 # Dependencies
 node_modules/
 

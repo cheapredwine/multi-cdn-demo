@@ -1,24 +1,17 @@
 # CLAUDE.md
 <!-- Agent context file. Read at the start of every session. Keep this current. -->
-<!-- Last reviewed: 2026-04-30 -->
-
-## First session bootstrap
-
-If the Project context section below still says "TODO", this project was just created from the template and has not been configured yet. Before doing anything else:
-
-1. Ask the user: "What does this project do?" — use the answer to replace the Project context section
-2. Ask the user: "Which bindings will you need?" — trim the Stack table to only those
-3. Uncomment the matching bindings in `wrangler.toml` and update `src/types.ts` `Env` to match
-4. Remove the First steps section from `README.md`
-5. Tell the user: "Template configured. Ready to build."
-
-Do not proceed with any other work until these steps are done.
-
----
+<!-- Last reviewed: 2026-05-13 -->
 
 ## Project context
 
 A multi-CDN demo environment that proves: (1) a single R2 origin serves multiple CDNs without replication, (2) CDN failover is operational not architectural, (3) protected content is JWT-gated and audited at the edge, and (4) origin egress fees are zero regardless of which CDN pulls. Built for a ~15-minute first meeting with a hospital IT director.
+
+Five Workers deploy from a single `wrangler.toml`:
+- **public-steering** (`cf-pool.demo...`) — passthrough / path_routing / percent_rollout modes
+- **secure** (`secure.demo...`) — JWT issuance, validation, protected content, audit log
+- **meter** (`meter.demo...`) — live egress-cost comparison UI
+- **portal** (`portal.demo...`) — patient portal HTML (injects DOMAIN at runtime)
+- **audit** (`audit.demo...`) — live audit log viewer HTML (injects DOMAIN at runtime)
 
 ---
 
@@ -28,13 +21,10 @@ A multi-CDN demo environment that proves: (1) a single R2 origin serves multiple
 |---|---|
 | Runtime | Cloudflare Workers |
 | Language | TypeScript |
-| Package manager | bun |
-| Testing | vitest |
+| Package manager | npm (bun referenced in scripts but not installed in this env) |
+| Testing | vitest + `@cloudflare/vitest-pool-workers` |
 | Linting / formatting | biome |
 | Storage (blob) | R2 |
-| Storage (ephemeral KV) | Workers KV |
-
-<!-- TODO: Remove bindings not used in this project -->
 
 ---
 
@@ -72,20 +62,18 @@ A multi-CDN demo environment that proves: (1) a single R2 origin serves multiple
 
 ```
 src/
-  index.ts                     # Default-config Worker (template stub, used by vitest)
+  index.ts                     # Default-config Worker stub (used by vitest)
   types.ts                     # All shared types; augments Cloudflare.Env
+  lib/
+    meter.ts                   # Shared egress-counter helpers (R2-backed)
   workers/
     public-steering/index.ts   # Bound to cf-pool.demo — multi-mode CF pool
     secure/index.ts            # Bound to secure.demo — JWT + audit log
     meter/index.ts             # Bound to meter.demo — egress meter UI
-  pages/
-    portal/index.html          # Pages: patient portal
-    audit/index.html           # Pages: live audit view
+    portal/index.ts            # Bound to portal.demo — patient portal HTML
+    audit/index.ts             # Bound to audit.demo — live audit viewer HTML
 __tests__/                     # Mirrors src/ structure
-wrangler.toml                  # Default dev/test config (vitest reads this)
-wrangler.public.toml           # Deploy config for public-steering
-wrangler.secure.toml           # Deploy config for secure
-wrangler.meter.toml            # Deploy config for meter
+wrangler.toml                  # Single config with [env.public|secure|meter|portal|audit]
 biome.json
 tsconfig.json
 vitest.config.mts
@@ -152,29 +140,36 @@ When you make an assumption, note it briefly at the end of your response: `Assum
 
 ## Commit hygiene
 
-Project-state docs (anything tracking resource inventory, status, handoff context, or open work — typically named `STATE.md`, `HANDOFF.md`, `TODO.md`, `RESTART.md`, or similar) MUST be updated as part of preparing any commit that materially changes the project. Treat them as part of the diff, not as an afterthought.
+Run tests before any commit that touches code. All checks must pass: `npm run typecheck && npm run lint && npm test`.
 
-Specifically:
-- A commit that changes infrastructure (resources created, deleted, or reconfigured) updates `STATE.md` in the same commit.
-- A commit that changes "what's working / what's broken / what's next" updates `HANDOFF.md` and `TODO.md` in the same commit.
-- A commit that changes how a future agent should restart on this project updates `RESTART.md` in the same commit.
-- Run tests before any commit that touches code (per global agent rules); update test counts in state docs if they shifted.
-
-If no state docs exist yet but the project has accumulated context worth tracking, propose them before the next commit instead of letting context decay.
+State docs (`STATE.md`, `HANDOFF.md`, `TODO.md`, `RESTART.md`) were removed in commit `640ab3a`. Do not recreate them unless explicitly asked.
 
 ---
 
 ## Local dev workflow
 
 ```bash
-bun install          # install deps
-wrangler dev         # local Worker dev server
-bun test             # run vitest
-bun run lint         # biome check
-bun run typecheck    # tsc --noEmit
+npm install          # install deps
+npx wrangler dev     # local Worker dev server
+npm test             # run vitest
+npm run lint         # biome check
+npm run typecheck    # tsc --noEmit
 ```
 
 All four should pass before considering anything shippable.
+
+## Deploy
+
+```bash
+npm run deploy:public   # public-steering Worker
+npm run deploy:secure   # secure Worker
+npm run deploy:meter    # meter Worker
+npm run deploy:portal   # portal Worker
+npm run deploy:audit    # audit Worker
+npm run deploy:all      # all five in sequence
+```
+
+> `npm run deploy` (without `--env`) deploys the test-only stub. Always use the env-specific scripts above.
 
 ---
 
@@ -184,5 +179,4 @@ All four should pass before considering anything shippable.
 - McpAgent sessions are tied to Durable Objects — don't expect them to survive a DO migration.
 - Workers AI responses are non-deterministic even at temperature 0 on some models — write tests that check structure, not exact content.
 - R2 `put` is eventually consistent for list operations — don't rely on immediate list visibility after a write in tests.
-
-<!-- Add to this file as you learn new things. It feeds the agent context on every session. -->
+- The KV namespace exists but is unused — audit and meter were migrated to R2 because KV write perms were not available on the demo account.
