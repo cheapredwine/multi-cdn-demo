@@ -16,3 +16,9 @@ dist/
 
 # Python venv (if recreated)
 venv/
+
+# Terraform state, provider cache, and secrets
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/terraform.tfvars

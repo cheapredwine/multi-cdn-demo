@@ -211,3 +211,33 @@ describe("handlePublicSteering — unknown mode", () => {
 		expect(res.status).toBe(500);
 	});
 });
+
+describe("handlePublicSteering — root who-served-me landing page", () => {
+	it("renders Cloudflare Edge banner on direct requests", async () => {
+		const e = envWith({ STEERING_MODE: "passthrough", DOMAIN: "demo.example.com" });
+		const ctx = createExecutionContext();
+		const res = await handlePublicSteering(new Request("https://assets.demo.example.com/"), e, ctx);
+		await waitOnExecutionContext(ctx);
+		expect(res.status).toBe(200);
+		expect(res.headers.get("served-by")).toBe("cf-edge");
+		const html = await res.text();
+		expect(html).toContain("Cloudflare Edge (cf-edge)");
+	});
+
+	it("renders AWS CloudFront banner when request arrives via CloudFront", async () => {
+		const e = envWith({ STEERING_MODE: "passthrough", DOMAIN: "demo.example.com" });
+		const ctx = createExecutionContext();
+		const res = await handlePublicSteering(
+			new Request("https://cf-pool.demo.example.com/", {
+				headers: { Via: "1.1 example.cloudfront.net (CloudFront)" },
+			}),
+			e,
+			ctx
+		);
+		await waitOnExecutionContext(ctx);
+		expect(res.status).toBe(200);
+		expect(res.headers.get("served-by")).toBe("cloudfront");
+		const html = await res.text();
+		expect(html).toContain("AWS CloudFront (cloudfront)");
+	});
+});

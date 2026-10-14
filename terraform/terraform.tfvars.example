@@ -1,0 +1,6 @@
+# Copy this file to terraform.tfvars and fill in the real value.
+# terraform.tfvars is gitignored and must never be committed.
+#
+# Real value is stored in 1Password under "AWS CDN Demo — Terraform secrets"
+
+multicdn_demo_secret = "<replace-with-32-byte-base64-secret>"

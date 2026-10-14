@@ -17,7 +17,8 @@ echo "========================================"
 echo ""
 
 # Use Python for HTTPS requests with disabled SSL verification (for local testing)
-PYTHON_CHECK=$(cat << 'PYEOF'
+PYTHON_CHECK=$(
+	cat <<'PYEOF'
 import urllib.request
 import ssl
 import json
@@ -40,12 +41,14 @@ def fetch(url, method='GET', data=None):
         return -1, {}, str(e).encode()
 
 def test_lb_steering():
+    import time
+    ts = int(time.time())
     print("=== Test 1: LB Steering (20 requests) ===")
     cf = 0
     cfront = 0
     errors = 0
     for i in range(20):
-        status, headers, body = fetch(f'https://{sys.argv[1]}/public/images/logo.png')
+        status, headers, body = fetch(f'https://{sys.argv[1]}/public/images/logo.png?cb={ts}-{i}')
         if status == 200:
             sb = headers.get('served-by', 'unknown')
             if 'cf' in sb.lower() and 'cloudfront' not in sb.lower():
