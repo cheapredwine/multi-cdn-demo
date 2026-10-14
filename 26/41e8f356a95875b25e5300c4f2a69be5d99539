@@ -1,0 +1,27 @@
+__tests__/workers/public-steering.test.ts
+  s_9d62d99bd5f369::t_38843394a79016 214-243
+scripts/standup.sh
+  s_9d62d99bd5f369::t_d6cdebe12a4198 1-23
+scripts/teardown.sh
+  s_9d62d99bd5f369::t_ef2bc2b2908322 1-31
+src/workers/public-steering/index.ts
+  s_9d62d99bd5f369::t_0bb67cd1b7142f 22-29,34-276,318,342-355
+terraform/.terraform.lock.hcl
+  s_9d62d99bd5f369::t_81251b8329bc8f 1-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "2641e8f356a95875b25e5300c4f2a69be5d99539",
+  "prompts": {},
+  "sessions": {
+    "s_9d62d99bd5f369": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ec788d394ffe1y5VT4b2bSARQR",
+        "model": "unknown"
+      },
+      "human_author": "Jason Sherron <jsherron@cloudflare.com>"
+    }
+  }
+}
