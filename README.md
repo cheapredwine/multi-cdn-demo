@@ -1,5 +1,10 @@
 # Multi-CDN Demo
 
+> ⚠️ **NOT OFFICIAL CLOUDFLARE.** Not affiliated with or endorsed by Cloudflare, Inc.
+> NO WARRANTIES, EXPRESS OR IMPLIED. Effectively untested demo code — read everything
+> and dry-run before you run. You assume all risk. See [DISCLAIMER.md](./DISCLAIMER.md).
+
+
 A multi-CDN demo environment built on Cloudflare. This project demonstrates how a single origin can serve multiple CDNs simultaneously, with instant failover, JWT-gated protected content with edge auditing, and zero origin egress fees.
 
 **Target audience:** Technical stakeholders who understand CDN basics and want to see multi-CDN steering, edge security, and cost optimization in action.
