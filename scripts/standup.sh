@@ -19,5 +19,14 @@ echo "==> Deploying all 5 Cloudflare Workers..."
 cd "$ROOT_DIR"
 npm run deploy:all
 
+echo "==> Ensuring JWT_SECRET is set on secure Worker..."
+openssl rand -base64 32 | npx wrangler secret put JWT_SECRET --env secure
+
+CF_POOL_DOMAIN=$(terraform -chdir="$ROOT_DIR/terraform" output -raw cloudfront_pool_domain)
+echo ""
+echo "==> CloudFront pool domain: $CF_POOL_DOMAIN"
+echo "    (If CloudFront was recreated, ensure the cloudfront-pool.demo.jsherron.com CNAME points to $CF_POOL_DOMAIN)"
+echo ""
+
 echo "==> Running end-to-end verification..."
 "$ROOT_DIR/scripts/verify-all.sh"
