@@ -6,7 +6,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-export CLOUDFLARE_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-[removed]}"
+export CLOUDFLARE_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:?Set CLOUDFLARE_ACCOUNT_ID in your environment}"
 
 echo "This will tear down the Multi-CDN demo (CloudFront distribution + 5 Workers)."
 echo "The ACM certificate and R2 bucket (multicdn-demo-20260505-2351) are preserved."
