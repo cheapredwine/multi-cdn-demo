@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
 	plugins: [
 			cloudflareTest({
-				wrangler: { configPath: "./wrangler.toml" },
+				wrangler: { configPath: "./wrangler.jsonc" },
 				miniflare: {
 					// Test-only secrets/vars. Real JWT_SECRET is set via `wrangler secret put --env secure`.
 					bindings: {

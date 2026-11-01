@@ -328,7 +328,7 @@ wrangler vars put DOMAIN --env portal
 wrangler vars put DOMAIN --env audit
 ```
 
-Or set it in the Cloudflare dashboard for each Worker (Settings → Variables). With `keep_vars = true` in `wrangler.toml`, these survive all future redeploys.
+Or set it in the Cloudflare dashboard for each Worker (Settings → Variables). With `keep_vars = true` in `wrangler.jsonc`, these survive all future redeploys.
 
 ### 4. Set the JWT secret
 
@@ -342,7 +342,7 @@ wrangler secret put JWT_SECRET --env secure
 Create an R2 bucket and upload the contents of `seed/`:
 
 ```bash
-# The bucket name must match what's configured in wrangler.toml
+# The bucket name must match what's configured in wrangler.jsonc
 wrangler r2 object put multicdn-demo-20260505-2351/public/healthcheck.txt --file seed/public/healthcheck.txt
 # ... repeat for all files under seed/public/ and seed/private/
 ```
@@ -367,7 +367,7 @@ bun run check      # all three at once
 
 ## Deploy
 
-This project deploys **five separate Workers** from a single `wrangler.toml`:
+This project deploys **five separate Workers** from a single `wrangler.jsonc`:
 
 ```bash
 # Deploy individual Workers
@@ -450,6 +450,6 @@ All hostnames and the R2 bucket name are injected at runtime via the `DOMAIN` va
    bun run deploy:all
    ```
 
-The `keep_vars = true` setting in `wrangler.toml` ensures dashboard/CLI variables survive future redeploys.
+The `keep_vars = true` setting in `wrangler.jsonc` ensures dashboard/CLI variables survive future redeploys.
 
 ---

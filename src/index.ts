@@ -2,7 +2,7 @@
  * Default Worker entry point (template stub).
  *
  * The deployed Workers for this demo live under src/workers/{public-steering,secure,meter}.
- * Each has its own wrangler.<name>.toml. This file is only used by `wrangler.toml`
+ * Each has its own wrangler.<name>.toml. This file is only used by `wrangler.jsonc`
  * (the dev/test config wired into vitest) and is intentionally a no-op 404 router.
  */
 

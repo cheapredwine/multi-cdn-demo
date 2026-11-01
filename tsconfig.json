@@ -4,7 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": ["ESNext"],
-    "types": ["@cloudflare/workers-types", "@cloudflare/vitest-pool-workers/types"],
+    "types": ["@cloudflare/vitest-pool-workers/types"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
@@ -13,5 +13,5 @@
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": ["src", "__tests__"]
+  "include": ["src", "__tests__", "worker-configuration.d.ts"]
 }
